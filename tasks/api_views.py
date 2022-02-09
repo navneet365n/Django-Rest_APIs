@@ -25,10 +25,6 @@ class TaskUtilityFunctions():
         task_history = TaskHistory(task=task, old_status=old_status, new_status=new_status)
         task_history.save()
     
-    def clean_title(self, title):
-        if len(title) < 10:
-            raise ValidationError('Title must be at least 10 characters long')
-    
     def priority_cascading_logic(self, priority):
         priority = int(priority)
         updated_tasks = []
@@ -64,7 +60,6 @@ class TaskViewSet(ModelViewSet, TaskUtilityFunctions):
 
     def create(self, request, *args, **kwargs):
         # Apply title validation and priority cascading
-        self.clean_title(request.data['title'])
         self.priority_cascading_logic(request.data['priority'])
 
         return super().create(request, *args, **kwargs)
@@ -74,7 +69,6 @@ class TaskViewSet(ModelViewSet, TaskUtilityFunctions):
    
     def update(self, request, *args, **kwargs):
         # Apply title validation and priority cascading
-        self.clean_title(request.data['title'])
         self.priority_cascading_logic(request.data['priority'])
 
         # Get the current active task instance

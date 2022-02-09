@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from rest_framework.serializers import ModelSerializer
 
 from tasks.models import Task, TaskHistory
+from rest_framework import serializers
 
 
 # User serializer
@@ -14,6 +15,7 @@ class UserSerializer(ModelSerializer):
 # Task serializer
 class TaskSerializer(ModelSerializer):
     user = UserSerializer(read_only=True)
+    title = serializers.CharField(min_length=10)
 
     class Meta:
         model = Task
@@ -21,7 +23,7 @@ class TaskSerializer(ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['pretty_date'] = instance.pretty_date()
+        data['title'] = data['title'].upper()
         return data
 
 # Task History serializer 
