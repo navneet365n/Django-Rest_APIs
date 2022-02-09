@@ -1,24 +1,21 @@
-
 from django.contrib import admin
-from django.urls import path
-
-from tasks.views import (GenericCompleteTaskView, GenericPendingTaskView, GenericTaskCreateView, 
-    GenericTaskDeleteView, GenericTaskDetailView, GenericTaskUpdateView, 
-    GenericTaskView, UserCreateView, UserLoginView, home_view)
-
 from django.contrib.auth.views import LogoutView
-
+from django.urls import include, path
 from rest_framework.routers import SimpleRouter
-from tasks.apiviews import TaskListApi, TaskViewSet, TaskHistoryViewSet
+from tasks.api_views import TaskHistoryViewSet, TaskViewSet
+from tasks.views import (GenericCompleteTaskView, GenericPendingTaskView,
+                         GenericTaskCreateView, GenericTaskDeleteView,
+                         GenericTaskDetailView, GenericTaskUpdateView,
+                         GenericTaskView, UserCreateView, UserLoginView,
+                         home_view)
 
 router = SimpleRouter()
 
-router.register(r'api/task', TaskViewSet)
-router.register(r'api/task-history/(?P<task_id>\d+)', TaskHistoryViewSet)
+router.register(r'tasks', TaskViewSet)
+router.register(r'task/(?P<task_id>\d+)/history', TaskHistoryViewSet)
 
 urlpatterns = [
     path("", home_view, name="home"),
-    path("taskapi", TaskListApi.as_view(), name="taskapi"),
     path("admin/", admin.site.urls),
     path("user/signup", UserCreateView.as_view(), name="create_user"),
     path("user/login", UserLoginView.as_view(), name="login_user"),
@@ -30,5 +27,6 @@ urlpatterns = [
     path("delete-task/<pk>", GenericTaskDeleteView.as_view(), name="delete_task"),
     path("completed-tasks", GenericCompleteTaskView.as_view(), name="completed_tasks"),
     path("pending-tasks", GenericPendingTaskView.as_view(), name="pending_tasks"),
-] + router.urls
+    path("api/v1/", include(router.urls)),
+]
 

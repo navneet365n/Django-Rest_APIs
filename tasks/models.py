@@ -23,11 +23,13 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
+    
+    def pretty_date(self):
+        return self.created_date.strftime("%a %d %b")
 
 
 class TaskHistory(models.Model):
-    task = models.ForeignKey(Task, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, related_name='tasks', on_delete=models.CASCADE)
     old_status = models.CharField(max_length=100, choices=STATUS_CHOICES, default=None)
     new_status = models.CharField(max_length=100, choices=STATUS_CHOICES, default=STATUS_CHOICES[0][0])
     updated_date = models.DateTimeField(auto_now=True)

@@ -23,7 +23,7 @@
     <div onclick="window.location.href = 'detail-task/{{task.id}}'" class="cursor-pointer flex justify-between items-center py-[25px] px-[22px] bg-[#F1F5F9] rounded-[16px] my-[15px]">
         <div class="flex flex-col">
             <h2 class="text-xl font-medium pr-[8px] {% if task.completed %} text-[#F43F5E] {% endif %}">{{ task.title }}</h2>
-            <h2 class="text-[16px] font-medium text-[#64748B]">{{ task.created_date|date:"D d M" }}</h2>
+            <h2 class="text-[16px] font-medium text-[#64748B]">{{ task.pretty_date }}</h2>
         </div>
         <div class="flex items-center justify-evenly">
             <a class="p-[11px] bg-[#2DD4BF] rounded-[8px] mr-[8px]" href="update-task/{{task.id}}">
@@ -37,7 +37,7 @@
                 </svg>
             </a>
         </div>
-        <a href="api/task-history/{{ task.id }}" class="text-blue-400 underline">See Task History</a>
+        <a href="api/v1/task/{{ task.id }}/history" class="text-blue-400 underline">See Task History</a>
     </div>
 
     {% endfor %}

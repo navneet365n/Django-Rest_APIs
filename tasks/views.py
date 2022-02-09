@@ -6,10 +6,9 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from tasks.apiviews import TaskHistorySerializer
 
-from tasks.models import Task, TaskHistory
-from django.db.models import F
+from tasks.models import Task
+from django.db import transaction
 
 
 class AuthorisedTaskManager(LoginRequiredMixin):
@@ -28,12 +27,7 @@ class TaskCreateForm(ModelForm):
         model = Task
         fields = ['title', 'description', 'priority', 'status', 'completed']
 
-
-class GenericTaskCreateView(LoginRequiredMixin, CreateView):
-    form_class = TaskCreateForm
-    template_name = 'task_create.html'
-    extra_context = {'title': 'Create Todo'}
-    success_url = '/tasks'
+class PriorityCascadingLogic():
 
     def form_valid(self, form):
         self.object = form.save()
@@ -41,23 +35,29 @@ class GenericTaskCreateView(LoginRequiredMixin, CreateView):
         self.object.save()
 
         priority = self.object.priority
-
+        
         updated_tasks = []
-        tasks = Task.objects.filter(deleted=False, user=self.request.user).select_for_update()
-        task_to_update = tasks.filter(priority=priority).exclude(pk=self.object.id)
 
-        while task_to_update.exists():
-            excluded_task_id = task_to_update[0].id
+        with transaction.atomic():
+            
+            tasks = Task.objects.filter(deleted=False, completed=False, user=self.request.user).exclude(pk=self.object.id).select_for_update().order_by('priority')
+            for task in tasks:
+                if task.priority == priority:
+                    task.priority = priority + 1
+                    priority += 1
+                    updated_tasks.append(task)
 
-            curr_task = tasks.get(id=excluded_task_id)
-            curr_task.priority = priority + 1
-            updated_tasks.append(curr_task)
+            # bulk update the tasks...
+            Task.objects.bulk_update(updated_tasks, ['priority'])
 
-            priority += 1
-            task_to_update = tasks.filter(priority=priority).exclude(pk=excluded_task_id)
-
-        Task.objects.bulk_update(updated_tasks, ['priority'])
         return HttpResponseRedirect(self.get_success_url())
+
+
+class GenericTaskCreateView(LoginRequiredMixin, PriorityCascadingLogic, CreateView):
+    form_class = TaskCreateForm
+    template_name = 'task_create.html'
+    extra_context = {'title': 'Create Todo'}
+    success_url = '/tasks'
 
 
 class GenericTaskDetailView(AuthorisedTaskManager, DetailView):
@@ -66,39 +66,18 @@ class GenericTaskDetailView(AuthorisedTaskManager, DetailView):
     extra_context = {'title': 'Task Details'}
 
 
-class GenericTaskUpdateView(AuthorisedTaskManager, UpdateView):
+class GenericTaskUpdateView(AuthorisedTaskManager, PriorityCascadingLogic, UpdateView):
     model = Task
     form_class = TaskCreateForm
     template_name = 'task_update.html'
     extra_context = {'title': 'Update Todo'}
     success_url = '/tasks'
 
-    def form_valid(self, form):
-        old_status = Task.objects.get(pk=self.object.id).status
-        self.object = form.save()
-        self.object.save()
-        new_status = self.object.status
-        if self.object.completed:
-            new_status = 'COMPLETED'
-        task_history = TaskHistory(task=self.object, old_status=old_status, new_status=new_status, user=self.request.user)
-        task_history.save()
-        return HttpResponseRedirect(self.get_success_url())
-
 
 class GenericTaskDeleteView(AuthorisedTaskManager, DeleteView):
     model = Task
     template_name = 'task_delete.html'
     success_url = '/tasks'
-
-    def form_valid(self, form):
-        task_id = self.object.id
-        Task.objects.filter(pk=task_id).update(deleted=True)
-        old_status = Task.objects.get(pk=task_id).status
-        new_status = 'CANCELLED'
-        task_history = TaskHistory(task=self.object, old_status=old_status, new_status=new_status, user=self.request.user)
-        task_history.save()
-
-        return HttpResponseRedirect(self.get_success_url())
 
 
 class UserLoginView(LoginView):
