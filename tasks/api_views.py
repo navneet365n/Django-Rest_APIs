@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.forms import ValidationError
+
 from django_filters.rest_framework import (BooleanFilter, CharFilter,
                                            ChoiceFilter, DateRangeFilter,
                                            DjangoFilterBackend, FilterSet)
@@ -59,7 +59,7 @@ class TaskViewSet(ModelViewSet, TaskUtilityFunctions):
         return Task.objects.filter(user=self.request.user, deleted=False)
 
     def create(self, request, *args, **kwargs):
-        # Apply title validation and priority cascading
+        # Apply priority cascading
         self.priority_cascading_logic(request.data['priority'])
 
         return super().create(request, *args, **kwargs)
@@ -68,7 +68,7 @@ class TaskViewSet(ModelViewSet, TaskUtilityFunctions):
         serializer.save(user=self.request.user)
    
     def update(self, request, *args, **kwargs):
-        # Apply title validation and priority cascading
+        # Apply priority cascading
         self.priority_cascading_logic(request.data['priority'])
 
         # Get the current active task instance
@@ -111,4 +111,4 @@ class TaskHistoryViewSet(ReadOnlyModelViewSet):
 
     def get_queryset(self):
         task_id = self.kwargs['task_id']  
-        return TaskHistory.objects.filter(task=task_id)
+        return TaskHistory.objects.filter(task__user=self.request.user, task=task_id)

@@ -29,6 +29,7 @@ class TaskSerializer(ModelSerializer):
 # Task History serializer 
 class TaskHistorySerializer(ModelSerializer):
     task = TaskSerializer(read_only=True)
+    updated_date = serializers.DateTimeField(format='%I:%M %p %d %B %Y')
 
     class Meta:
         model = TaskHistory

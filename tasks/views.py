@@ -117,6 +117,7 @@ class GenericCompleteTaskView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['total_tasks_len'] = Task.objects.filter(deleted=False, user=self.request.user).count()
+        context['completed_tasks_len'] = Task.objects.filter(completed=True, deleted=False, user=self.request.user).count()
         return context
 
 
