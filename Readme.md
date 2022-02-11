@@ -1,10 +1,10 @@
-In This milestone, you will be extending the functionality of the project we worked in the level.
+In This milestone, I'm extending the functionality of the project I worked in [Django ORM Task Manager](https://github.com/Ankur-9598/django_orm_task_manager)
 
 The specification for this program is as follows,
 
 ## Specification
 
-You are asked to build the same project we worked on in the level and add two new features to it.
+To implement the two new features to it.
 
 1) A Filter to filter out completed tasks in the Tasks Listing API.
 2) Creating a model to store the history of the tasks changes in status
@@ -12,9 +12,10 @@ You are asked to build the same project we worked on in the level and add two ne
 3) API to view all changes made to a task. This API should have filters based on the date and status.
 
 
-This milestone should be implemented with the Django ORM. All required model changes and migrations must be performed by yourself, make sure to include any migrations created in the submission.
+## Extra Routes
+1. ```api/v1/tasks``` :- Task ViewSet API endpoint
 
-The routes are not predefined, you can use any names for them.
+2. ```api/v1/task/<pk>/history``` :- Task History API endpoint
 
 ## Boilerplate code
 
@@ -25,7 +26,3 @@ to install the requirements for this project, run the following command in your 
 ```bash
 pip install -r requirements.txt
 ```
-
-## Submission
-
-Once all the required features are implemented, push the code to a GitHub repository and submit the link to the repo.
