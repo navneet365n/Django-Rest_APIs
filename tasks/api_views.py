@@ -25,11 +25,11 @@ class TaskUtilityFunctions():
         task_history = TaskHistory(task=task, old_status=old_status, new_status=new_status)
         task_history.save()
     
-    def priority_cascading_logic(self, priority):
+    def priority_cascading_logic(self, priority, task_id=None):
         priority = int(priority)
         updated_tasks = []
         with transaction.atomic():
-            tasks = Task.objects.filter(deleted=False, completed=False, user=self.request.user).select_for_update().order_by('priority')
+            tasks = Task.objects.filter(deleted=False, completed=False, user=self.request.user).exclude(pk=task_id).select_for_update().order_by('priority')
             for task in tasks:
                 if task.priority == priority:
                     task.priority = priority + 1
@@ -68,11 +68,12 @@ class TaskViewSet(ModelViewSet, TaskUtilityFunctions):
         serializer.save(user=self.request.user)
    
     def update(self, request, *args, **kwargs):
-        # Apply priority cascading
-        self.priority_cascading_logic(request.data['priority'])
-
         # Get the current active task instance
         task = self.get_object()
+
+        # Apply priority cascading
+        self.priority_cascading_logic(request.data['priority'], task.id)
+
         old_status = task.status
         new_status = request.data['status']
         
